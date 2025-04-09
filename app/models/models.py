@@ -28,3 +28,16 @@ class JournalEntry(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     user = relationship("User", back_populates="journal_entries")
+
+
+class MoodLog(Base):
+    __tablename__ = "mood_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mood = Column(String, index=True)
+    tags = Column(String)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.now)
+    user = relationship("User")
+    journal_entry = relationship("JournalEntry")

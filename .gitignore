@@ -5,3 +5,5 @@ env/
 pycache/
 *.log
 .env
+alembic.ini
+alembic
