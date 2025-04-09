@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.db.database import get_db
-from app.models.models import JournalEntry, User
+from app.models.models import User
 from app.schemas.schemas import JournalEntryCreate, JournalEntry as JournalEntrySchema
+from app.crud import journal as crud_journal
 
 router = APIRouter()
 
@@ -15,15 +16,7 @@ def create_journal_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_entry = JournalEntry(
-        title=entry.title,
-        content=entry.content,
-        user_id=entry.id
-    )
-    db.add(db_entry)
-    db.commit()
-    db.refresh(db_entry)
-    return db_entry
+    return crud_journal.create_journal_entry(db, entry, current_user.id)
 
 
 @router.get("/", response_model=List[JournalEntrySchema])
@@ -33,10 +26,7 @@ def read_journal_entries(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    entries = db.query(JournalEntry).filter(
-        JournalEntry.user_id == current_user.id
-    ).order_by(JournalEntry.created_at.desc()).offset(skip).limit(limit).all()
-    return entries
+    return crud_journal.get_journal_entries(db, current_user.id, skip, limit)
 
 
 @router.get("/{entry_id}", response_model=JournalEntrySchema)
@@ -45,10 +35,7 @@ def read_journal_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    entry = db.query(JournalEntry).filter(
-        JournalEntry.id == entry_id,
-        JournalEntry.user_id == current_user.id
-    ).first()
+    entry = crud_journal.get_journal_entry(db, entry_id, current_user.id)
     if entry is None:
         raise HTTPException(status_code=404, detail="Journal entry not found")
     return entry
@@ -61,18 +48,10 @@ def update_journal_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_entry = db.query(JournalEntry).filter(
-        JournalEntry.id == entry_id,
-        JournalEntry.user_id == current_user.id
-    ).first()
+    db_entry = crud_journal.get_journal_entry(db, entry_id, current_user.id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Journal entry not found")
-
-    db_entry.title = entry.title
-    db_entry.content = entry.content
-    db.commit()
-    db.refresh(db_entry)
-    return db_entry
+    return crud_journal.update_journal_entry(db, db_entry, entry)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -81,13 +60,8 @@ def delete_journal_entry(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_entry = db.query(JournalEntry).filter(
-        JournalEntry.id == entry_id,
-        JournalEntry.user_id == current_user.id
-    ).first()
+    db_entry = crud_journal.get_journal_entry(db, entry_id, current_user.id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Journal entry not found")
-
-    db.delete(db_entry)
-    db.commit()
+    crud_journal.delete_journal_entry(db, db_entry)
     return None
