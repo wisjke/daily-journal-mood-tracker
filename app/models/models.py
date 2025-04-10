@@ -41,3 +41,26 @@ class MoodLog(Base):
     created_at = Column(DateTime, default=datetime.now)
     user = relationship("User")
     journal_entry = relationship("JournalEntry")
+
+
+class ReflectionPrompt(Base):
+    __tablename__ = "reflection_prompts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+
+class ReflectionAnswer(Base):
+    __tablename__ = "reflection_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    prompt_id = Column(Integer, ForeignKey("reflection_prompts.id"))
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    journal_entry = relationship("JournalEntry")
+    user = relationship("User")
+    prompt = relationship("ReflectionPrompt")

@@ -63,3 +63,27 @@ class MoodLog(MoodLogBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReflectionPrompt(BaseModel):
+    id: int
+    text: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ReflectionAnswerCreate(BaseModel):
+    journal_entry_id: int
+    prompt_id: int
+    answer: str
+
+
+class ReflectionAnswer(BaseModel):
+    id: int
+    journal_entry_id: int
+    prompt_id: int
+    answer: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
