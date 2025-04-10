@@ -6,6 +6,9 @@ from app.db.database import get_db
 from app.models.models import User
 from app.schemas.schemas import JournalEntryCreate, JournalEntry as JournalEntrySchema
 from app.crud import journal as crud_journal
+from fastapi import Response
+from app.services import export
+
 
 router = APIRouter()
 
@@ -65,3 +68,27 @@ def delete_journal_entry(
         raise HTTPException(status_code=404, detail="Journal entry not found")
     crud_journal.delete_journal_entry(db, db_entry)
     return None
+
+
+@router.get("/{entry_id}/export/markdown")
+def export_markdown(entry_id: int, db: Session = Depends(get_db),
+                    current_user: User = Depends(get_current_user)):
+    entry = crud_journal.get_journal_entry(db, entry_id, current_user.id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    md_content = export.generate_markdown(entry)
+    return Response(content=md_content,
+                    media_type="text/markdown",
+                    headers={"Content-Disposition": f"attachment; filename=entry_{entry.id}.md"})
+
+
+@router.get("/{entry_id}/export/pdf")
+def export_pdf(entry_id: int, db: Session = Depends(get_db),
+               current_user: User = Depends(get_current_user)):
+    entry = crud_journal.get_journal_entry(db, entry_id, current_user.id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    pdf_bytes = export.generate_pdf(entry)
+    return Response(content=pdf_bytes,
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f"attachment; filename=entry_{entry.id}.pdf"})
