@@ -65,6 +65,19 @@ class MoodLog(MoodLogBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class MoodRatingCreate(BaseModel):
+    score: int
+
+
+class MoodRating(BaseModel):
+    id: int
+    user_id: int
+    score: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ReflectionPrompt(BaseModel):
     id: int
     text: str

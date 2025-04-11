@@ -43,6 +43,15 @@ class MoodLog(Base):
     journal_entry = relationship("JournalEntry")
 
 
+class MoodRating(Base):
+    __tablename__ = "mood_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    score = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+
 class ReflectionPrompt(Base):
     __tablename__ = "reflection_prompts"
 
